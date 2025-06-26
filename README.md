@@ -17,7 +17,7 @@ This repository contains my personal configuration files for various tools and a
 ### Quick Install
 
 ```bash
-git clone https://github.com/yourusername/.dotfiles.git ~/.dotfiles
+git clone https://github.com/RealVonmakeheat/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 ./install.sh
 ```
@@ -26,7 +26,7 @@ cd ~/.dotfiles
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/.dotfiles.git ~/.dotfiles
+   git clone https://github.com/RealVonmakeheat/.dotfiles.git ~/.dotfiles
    ```
 
 2. Create symlinks for the configuration files you want to use:
