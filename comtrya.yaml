@@ -1,0 +1,34 @@
+# ~/dotfiles/comtrya.yaml
+# This is a minimal and correctly structured Comtrya configuration file.
+# If you are still getting Comtrya errors, start with ONLY this content,
+# then gradually add your actual dotfile configurations, testing each addition.
+
+tasks:
+  - name: "Example: Create a dummy file"
+    where:
+      - platform: linux
+      - platform: darwin
+    actions:
+      - action: file
+        path: "{{ .chezmoi.homeDir }}/.comtrya_test_file.txt"
+        state: present
+        contents: |
+          This file was created by Comtrya.
+          If you see this, your comtrya.yaml is being parsed correctly!
+
+  - name: "Example: Install Git via Homebrew (macOS)"
+    where:
+      - platform: darwin
+    actions:
+      - action: brew
+        name: "git"
+        state: present
+
+  - name: "Example: Install htop via apt (Linux Debian/Ubuntu)"
+    where:
+      - platform: linux
+        family: debian
+    actions:
+      - action: apt
+        name: "htop"
+        state: present

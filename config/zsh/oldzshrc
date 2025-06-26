@@ -1,0 +1,142 @@
+# ~/.zshrc
+
+# Set locale to ensure proper character and ANSI escape code interpretation
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+
+# Explicitly unset then set prompt options for robustness
+# These options help ensure the prompt displays correctly with colors and substitutions.
+unsetopt PROMPT_SP    # Disable special prompt expansion (sometimes causes issues)
+unsetopt PROMPT_SUBST # Ensure prompt substitutions are processed correctly
+setopt PROMPT_SUBST   # Enable substitutions like $(git_prompt_info)
+setopt PROMPT_SP      # Enable prompt spell correction (can be useful)
+
+# ASCII art banner for visual appeal on shell start
+# This is a static banner; for dynamic banners or frequent changes,
+# consider moving this to a function and calling the function here.
+echo " _____                                                       _____"
+echo "( ___ )-----------------------------------------------------( ___ )"
+echo " |   |                                                       |   | "
+echo " |   |  ______     ______        ______     ______   ______  |   | "
+echo " |   | /\\  ___\\   /\\  __ \\      /\\  __ \\   /\\  ___/\\  ___\\ |   |"
+echo " |   | \\ \\ \\__ \\  \\ \\ \\/\\ \\     \\ \\ \\/\\ \\  \\ \\  __\\ \\ \\  __\\ |   |"
+echo " |   |  \\ \\_____\\  \\ \\_____\\     \\ \\_____\\  \\ \\_\\    \\ \\_\\   |   |"
+echo " |   |   \\/_____/   \\/_____/      \\/_____/   \\/_/     \\/_/   |   |"
+echo " |___|                                                       |___|"
+echo "(_____)-----------------------------------------------------(_____)"
+
+
+# Path to your Oh My Zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
+
+# Set name of the theme to load (empty for custom prompt)
+# Setting this to empty means you will define your PROMPT manually below.
+ZSH_THEME=""
+
+# Which plugins would you like to load?
+# 'git' is a common and highly useful plugin for Git repository status in your prompt.
+plugins=(git)
+
+# This line loads Oh My Zsh core functionality and the specified plugins.
+# It MUST be sourced BEFORE defining your custom PROMPT if you use OMZ functions
+# like `git_prompt_info`.
+source $ZSH/oh-my-zsh.sh
+
+# --- Your Custom Prompt Definition (after the source line) ---
+
+# Add an empty line for spacing after the banner.
+echo " "
+
+# Define ANSI color codes for your prompt for better readability and aesthetics.
+# %F{color} sets foreground color, %f resets it.
+# %B sets bold, %b resets it.
+# ANSI escape codes for colors and formatting are wrapped with %{...%} for Zsh
+# to correctly calculate prompt length and line wrapping.
+local ORANGE="%{$fg_bold[red]%}"   # Using a bold red for a more orange-like feel in some terminals
+local LIGHT_BLUE="%{$fg[blue]%}" # Standard blue
+local WHITE="%{$fg[white]%}"     # Standard white
+local RED="%{$fg[red]%}"         # Standard red
+local GREEN="%{$fg[green]%}"     # Standard green
+local RESET="%{$reset_color%}"   # Resets all formatting (color, bold, etc.)
+
+# Customizing Oh My Zsh's git_prompt_info symbols:
+# This allows you to control how Git status (untracked, modified, clean) appears.
+ZSH_THEME_GIT_PROMPT_UNTRACKED="${RED}U"    # Untracked files, shown in red
+ZSH_THEME_GIT_PROMPT_MODIFIED="${ORANGE}M"  # Modified files, shown in orange/bold red
+ZSH_THEME_GIT_PROMPT_CLEAN="${GREEN}✔"     # Clean working directory, shown in green checkmark
+ZSH_THEME_GIT_PROMPT_PREFIX=" ${LIGHT_BLUE}git:(${RESET}" # Prefix before branch name (e.g., " git:(")
+ZSH_THEME_GIT_PROMPT_SUFFIX="${LIGHT_BLUE})${RESET}"      # Suffix after status (e.g., ")")
+ZSH_THEME_GIT_PROMPT_DIRTY="" # No specific symbol for dirty, relies on Modified/Untracked
+ZSH_THEME_GIT_PROMPT_AHEAD="" # No specific symbol for ahead of remote
+ZSH_THEME_GIT_PROMPT_BEHIND="" # No specific symbol for behind remote
+
+# Define the PROMPT string itself.
+# %n: Username
+# %m: Hostname (short)
+# %c: Current working directory (truncated)
+# $(git_prompt_info): Oh My Zsh function that displays Git branch and status.
+# %#: Zsh prompt character (% for user, # for root).
+PROMPT='${ORANGE}%n@%m ${WHITE}%c${RESET}$(git_prompt_info)%# '
+
+
+### PINGBING COMMAND START ###
+# This function provides a convenient way to interact with your 'pingbing' setup.
+# It allows re-running the setup, updating dotfiles, running system checks, or launching the app.
+pingbing() {
+  # Emulate Bourne shell to ensure consistent behavior regardless of shell options.
+  emulate -LR zsh
+
+  # These paths should match the definitions in your main 'install' script.
+  local PINGBING_REPO_DIR="$HOME/.dotfiles"          # Path to the dotfiles repository.
+  local PINGBING_INSTALL_SCRIPT="$PINGBING_REPO_DIR/install" # Path to this install script itself.
+  local PINGBING_APP_BINARY="$PINGBING_REPO_DIR/initialize/target/release/pingbing" # Path to the compiled Rust application binary.
+
+  # Verify that the install script exists.
+  if [ ! -f "$PINGBING_INSTALL_SCRIPT" ]; then
+    echo "Error: pingbing install script not found at $PINGBING_INSTALL_SCRIPT."
+    echo "Please ensure your dotfiles are cloned to $PINGBING_REPO_DIR and 'install' is present."
+    return 1
+  fi
+
+  # Handle subcommands based on the first argument.
+  case "$1" in
+    install)
+      echo "Running pingbing installer..."
+      # Execute the main install script, passing all arguments from the second one onwards.
+      bash "$PINGBING_INSTALL_SCRIPT" "${@:2}"
+      ;;
+    update)
+      echo "Updating pingbing dotfiles repository..."
+      if [ -d "$PINGBING_REPO_DIR" ]; then
+        (cd "$PINGBING_REPO_DIR" && git pull origin main) # Update dotfiles from Git.
+        echo "Re-running pingbing installer after update..."
+        bash "$PINGBING_INSTALL_SCRIPT" "${@:2}" # Re-run installer to apply new dotfiles.
+      else
+        echo "Error: Dotfiles repository not found at $PINGBING_REPO_DIR. Cannot update."
+        echo "Please run 'pingbing install' first."
+        return 1
+      fi
+      ;;
+    system-check)
+      echo "Running pingbing system checks..."
+      # Call the install script with the "system-check" argument.
+      bash "$PINGBING_INSTALL_SCRIPT" "system-check" "${@:2}"
+      ;;
+    *)
+      # If no known subcommand, attempt to execute the compiled Rust binary.
+      if [ -f "$PINGBING_APP_BINARY" ] && [ -x "$PINGBING_APP_BINARY" ]; then
+        "$PINGBING_APP_BINARY" "$@" # Pass all arguments directly to the binary.
+      else
+        echo "Error: 'pingbing' application binary not found or not executable at $PINGBING_APP_BINARY."
+        echo "Did you run 'pingbing install' successfully?"
+        echo "Usage: pingbing [install|update|system-check] [flags]"
+        echo "  install: Runs the main setup script for initial setup or re-application."
+        echo "  update: Pulls latest dotfiles from Git and re-runs the setup script."
+        echo "  system-check: Runs pre-flight checks without installing anything."
+        echo "  (No subcommand): Runs the compiled 'pingbing' application."
+        return 1
+      fi
+      ;;
+  esac
+}
+### PINGBING COMMAND END ###
